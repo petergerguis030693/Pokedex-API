@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PokeDex API</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="shortcut icon" href="img/pokeball.png" type="image/x-icon">
+    <script src="script.js"></script>
+  </head>
+  <body onload="renderPokemon()">
+    <header>
+      <img src="img/pokeball.png" />
+      <div>
+        <input
+          type="text"
+          id="search"
+          placeholder="Search Pokémon by name..."
+          onload="search()"
+        />
+      </div>
+    </header>
+
+    <div class="container" id="pokemon-list"></div>
+    <button onclick="more()" class="btn btn-danger" style="margin-bottom: 36px">Load More</button>
+
+    <div id="pokemon-modal" class="modal modal-myself">
+      <button type="button" class="btn-close" aria-label="Close" onclick="closeModal()"></button>
+      <div class="modal-content modal-content-myself" id="pokemon-modal-content"></div>
+
+
+  </div>
+
+ 
+  </body>
+</html>

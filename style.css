@@ -121,8 +121,9 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 500px !important;
-  height: 800px;
+  width: 320px !important;
+  height: auto;
+  padding-bottom: 10px;
 }
 
 .modal-myself {
@@ -156,10 +157,12 @@ table {
 
 .position-btn-left {
   position: absolute;
-  left: -200px;
+  top: 250px;
+  left: -150px;
 }
 
 .position-btn-right {
   position: absolute;
-  right: 25px;
+  top: 250px;
+  right: 0px;
 }

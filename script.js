@@ -1,5 +1,6 @@
 let pokemonList = [];
 let currentIndex = 1;
+let currentPokemonIndex = 0;
 
 async function init() {
   for (let i = 1; i < 29; i++) {
@@ -23,7 +24,7 @@ function renderPokemon() {
     const pokemon = pokemonList[i];
     const pokemonDiv = document.createElement("div");
     const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
-    const typesString = types.join("<p>");
+    const typesString = types.join(", ");
     const backgroundColor = ifRequest(types);
     pokemonDiv.style.backgroundColor = backgroundColor;
 
@@ -35,10 +36,10 @@ function renderPokemon() {
             </div>
          <div class="upperC">
             <img src="${pokemon.sprites.front_default}">
-            <div class="categoryTypes" onclick="detailPokemon(${i}, ${
+            <div class="categoryTypes" onclick="detailPokemon(${i}, '${
       pokemon.name
-    }, ${types})">
-              <p>${types}</p>
+    }', '${typesString}')">
+              <p>${typesString}</p>
             </div>
         </div>
         `;
@@ -73,7 +74,7 @@ function ifRequest(types) {
   let primaryType = types[0];
 
   let backgroundColor;
-  switch (types[0]) {
+  switch (primaryType) {
     case "fire":
       backgroundColor = "red";
       break;
@@ -122,9 +123,6 @@ function ifRequest(types) {
     case "steel":
       backgroundColor = "silver";
       break;
-    case "normal,flying":
-      backgroundColor = "skyblue";
-      break;
     case "fairy":
       backgroundColor = "lightpink";
       break;
@@ -138,14 +136,18 @@ function detailPokemon(pokemon) {
   const modal = document.getElementById("pokemon-modal");
   const modalContent = document.getElementById("pokemon-modal-content");
 
-  const abilities = pokemon.abilities
+  const abilities = (pokemon.abilities || [])
+    .filter((abilityInfo) => abilityInfo && abilityInfo.ability)
     .map((abilityInfo) => abilityInfo.ability.name)
     .join(", ");
   const weight = pokemon.weight;
   const height = pokemon.height;
-  const types = pokemon.types.map((typeInfo) => typeInfo.type.name).join(", ");
+  const types = (pokemon.types || [])
+    .filter((typeInfo) => typeInfo && typeInfo.type)
+    .map((typeInfo) => typeInfo.type.name)
+    .join(", ");
 
-  const movePromises = pokemon.moves.slice(0, 5).map((moveInfo) => {
+  const movePromises = (pokemon.moves || []).slice(0, 5).map((moveInfo) => {
     const moveName = moveInfo.move.name;
     const moveUrl = moveInfo.move.url;
 
@@ -160,7 +162,6 @@ function detailPokemon(pokemon) {
         const power = moveData.power || 0;
         return `
                   <div>
-                 
                       <p>${moveName}</p>
                       <div class="progress" role="progressbar" aria-label="${moveName}" aria-valuenow="${power}" aria-valuemin="0" aria-valuemax="100">
                           <div class="progress-bar" style="width: ${power}%">${power}</div>
@@ -201,13 +202,31 @@ function detailPokemon(pokemon) {
               </div>
               ${moveHtml.join("")}
           </div>
-          <button class="btn btn-danger position-btn-right">Right</button>
-          <button class="btn btn-danger position-btn-left">Left</button>
-      `;
+          <button class="btn btn-danger position-btn-right"  onclick="next()">-></button>
+          <button class="btn btn-danger position-btn-left" onclick="back()"><-</button>
+          `;
     modal.style.display = "block";
     document.body.style.backgroundColor = "lightgrey";
     document.getElementById("pokemon-list").style.display = "none";
   });
+}
+
+function navigatePokemon(direction) {
+  let newIndex = currentPokemonIndex + direction;
+  if (newIndex >= 0 && newIndex < pokemonList.length) {
+    currentPokemonIndex = newIndex;
+    detailPokemon(pokemonList[newIndex]);
+  } else {
+    console.warn("Navigation out of bounds", newIndex);
+  }
+}
+
+function next() {
+  navigatePokemon(1);
+}
+
+function back() {
+  navigatePokemon(-1);
 }
 
 function closeModal() {
@@ -216,3 +235,5 @@ function closeModal() {
   document.body.style.backgroundColor = "white";
   document.getElementById("pokemon-list").style.display = "";
 }
+
+

@@ -52,12 +52,16 @@ header button {
   color: white;
 }
 
-.container {
+.containerMain {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 20px;
+  justify-content: center;
+  align-items: center;
 }
+
+
 
 .pokemon {
   height: auto;
@@ -117,7 +121,6 @@ button {
 }
 
 .modal-content-myself {
-  display: flex;
   justify-content: center;
   align-items: center;
   width: 320px !important;
@@ -131,8 +134,10 @@ button {
 
 @media (max-width: 600px) {
   .modal-myself {
+    justify-content: center;
+    align-items: center;
     margin-left: 0px;
-  }
+    }
 }
 
 .btn-danger {

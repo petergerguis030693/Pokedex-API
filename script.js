@@ -3,7 +3,7 @@ let currentIndex = 1;
 let currentPokemonIndex = 0;
 
 async function init() {
-  for (let i = 1; i < 29; i++) {
+  for (let i = 1; i < 41; i++) {
     await loadPokemon(i);
   }
   renderPokemon();
@@ -26,8 +26,17 @@ function renderPokemon() {
     const typesString = types.join(", ");
     const backgroundColor = ifRequest(types);
 
-    const pokemonDiv = createPokemonDiv(i, pokemon, typesString, backgroundColor);
-    pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
+    const pokemonDiv = createPokemonDiv(
+      i,
+      pokemon,
+      typesString,
+      backgroundColor
+    );
+    pokemonDiv.addEventListener("click", () => {
+      currentPokemonIndex = i;
+      detailPokemon(pokemon);
+    });
+
     pokemonContainer.appendChild(pokemonDiv);
   }
 }
@@ -36,7 +45,12 @@ function createPokemonDiv(index, pokemon, typesString, backgroundColor) {
   const pokemonDiv = document.createElement("div");
   pokemonDiv.style.backgroundColor = backgroundColor;
   pokemonDiv.className = "pokemon";
-  pokemonDiv.innerHTML = createPokemonCardHtml(index, pokemon.name, pokemon.sprites.front_default, typesString);
+  pokemonDiv.innerHTML = createPokemonCardHtml(
+    index,
+    pokemon.name,
+    pokemon.sprites.front_default,
+    typesString
+  );
   return pokemonDiv;
 }
 
@@ -54,7 +68,6 @@ function createPokemonCardHtml(index, name, imgSrc, typesString) {
     </div>
   `;
 }
-
 
 async function loadMorePokemon() {
   const promises = [];
@@ -151,7 +164,7 @@ function createHeader(name) {
 
 function createCard(imgSrc, abilities, types, weight, height, moveHtml) {
   return `<div class="card" style="width: 18rem;">
-    <div class="card-body"><img src="${imgSrc}" class="card-img-top">${createTable(
+    <div class="card-body"><img src="${imgSrc}" class="card-img-top" >${createTable(
     abilities,
     types,
     weight,
@@ -280,7 +293,7 @@ function ifRequest(types) {
 
 function search() {
   const query = document.getElementById("search").value.toLowerCase();
-  const filteredPokemon = pokemonList.filter(pokemon =>
+  const filteredPokemon = pokemonList.filter((pokemon) =>
     pokemon.name.toLowerCase().includes(query)
   );
   renderFilteredPokemon(filteredPokemon);
@@ -296,7 +309,12 @@ function renderFilteredPokemon(filteredPokemon) {
     const typesString = types.join(", ");
     const backgroundColor = ifRequest(types);
 
-    const pokemonDiv = createPokemonDiv(i, pokemon, typesString, backgroundColor);
+    const pokemonDiv = createPokemonDiv(
+      i,
+      pokemon,
+      typesString,
+      backgroundColor
+    );
     pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
     pokemonContainer.appendChild(pokemonDiv);
   }

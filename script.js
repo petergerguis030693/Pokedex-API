@@ -22,31 +22,39 @@ function renderPokemon() {
 
   for (let i = 0; i < pokemonList.length; i++) {
     const pokemon = pokemonList[i];
-    const pokemonDiv = document.createElement("div");
     const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
     const typesString = types.join(", ");
     const backgroundColor = ifRequest(types);
-    pokemonDiv.style.backgroundColor = backgroundColor;
 
-    pokemonDiv.className = "pokemon";
-    pokemonDiv.innerHTML = `
-            <div class="upperContainer">
-                <p>#${i + 1}</p>
-                <h3>${pokemon.name}</h3>
-            </div>
-         <div class="upperC">
-            <img src="${pokemon.sprites.front_default}">
-            <div class="categoryTypes" onclick="detailPokemon(${i}, '${
-      pokemon.name
-    }', '${typesString}')">
-              <p>${typesString}</p>
-            </div>
-        </div>
-        `;
+    const pokemonDiv = createPokemonDiv(i, pokemon, typesString, backgroundColor);
     pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
     pokemonContainer.appendChild(pokemonDiv);
   }
 }
+
+function createPokemonDiv(index, pokemon, typesString, backgroundColor) {
+  const pokemonDiv = document.createElement("div");
+  pokemonDiv.style.backgroundColor = backgroundColor;
+  pokemonDiv.className = "pokemon";
+  pokemonDiv.innerHTML = createPokemonCardHtml(index, pokemon.name, pokemon.sprites.front_default, typesString);
+  return pokemonDiv;
+}
+
+function createPokemonCardHtml(index, name, imgSrc, typesString) {
+  return `
+    <div class="upperContainer">
+      <p>#${index + 1}</p>
+      <h3>${name}</h3>
+    </div>
+    <div class="upperC">
+      <img src="${imgSrc}">
+      <div class="categoryTypes" onclick="detailPokemon(${index}, '${name}', '${typesString}')">
+        <p>${typesString}</p>
+      </div>
+    </div>
+  `;
+}
+
 
 async function loadMorePokemon() {
   const promises = [];
@@ -63,6 +71,144 @@ async function more() {
 }
 
 init();
+
+function detailPokemon(pokemon) {
+  const modal = document.getElementById("pokemon-modal");
+  const modalContent = document.getElementById("pokemon-modal-content");
+
+  const abilities = extractNames(pokemon.abilities, "ability");
+  const types = extractNames(pokemon.types, "type");
+  const weight = pokemon.weight;
+  const height = pokemon.height;
+
+  fetchMoveHtml(pokemon.moves).then((moveHtml) => {
+    modalContent.innerHTML = createModalContent(
+      pokemon,
+      abilities,
+      types,
+      weight,
+      height,
+      moveHtml
+    );
+    modal.style.display = "block";
+    document.body.style.backgroundColor = "lightgrey";
+    document.getElementById("pokemon-list").style.display = "none";
+  });
+}
+
+function extractNames(array, key) {
+  return (array || [])
+    .filter((info) => info && info[key])
+    .map((info) => info[key].name)
+    .join(", ");
+}
+
+function fetchMoveHtml(moves) {
+  const movePromises = (moves || []).slice(0, 5).map(({ move }) =>
+    fetch(move.url)
+      .then((response) => {
+        if (!response.ok)
+          throw new Error(`Failed to fetch move data for ${move.name}`);
+        return response.json();
+      })
+      .then((data) => createMoveHtml(move.name, data.power || 0))
+      .catch(() => `<p>${move.name}: Unable to fetch move data</p>`)
+  );
+  return Promise.all(movePromises);
+}
+
+function createMoveHtml(name, power) {
+  return `<div>
+    <p>${name}</p>
+    <div class="progress" role="progressbar" aria-label="${name}" aria-valuenow="${power}" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar" style="width: ${power}%">${power}</div>
+     </div>
+    </div>`;
+}
+
+function createModalContent(
+  pokemon,
+  abilities,
+  types,
+  weight,
+  height,
+  moveHtml
+) {
+  return `${createHeader(pokemon.name)}
+  ${createCard(
+    pokemon.sprites.front_default,
+    abilities,
+    types,
+    weight,
+    height,
+    moveHtml
+  )}`;
+}
+
+function createHeader(name) {
+  return `<h5 class="card-title">${name}</h5>`;
+}
+
+function createCard(imgSrc, abilities, types, weight, height, moveHtml) {
+  return `<div class="card" style="width: 18rem;">
+    <div class="card-body"><img src="${imgSrc}" class="card-img-top">${createTable(
+    abilities,
+    types,
+    weight,
+    height
+  )}</div>
+    ${moveHtml.join("")}
+    ${createButtons()}</div>`;
+}
+
+function createTable(abilities, types, weight, height) {
+  return `<table class="table table-borderless">${createTableRow(
+    "Types",
+    types
+  )}
+  ${createTableRow("Weight", weight)}
+  ${createTableRow("Height", height)}
+  ${createTableRow("Abilities", abilities)}
+  </table>`;
+}
+
+function createTableRow(label, value) {
+  return `
+  <tr>
+      <td>${label}</td>
+      <td>${value}</td>
+  </tr>`;
+}
+
+function createButtons() {
+  return `<button class="btn btn-danger position-btn-right" onclick="next()">-></button>
+  <button class="btn btn-danger position-btn-left" onclick="back()"><-</button>`;
+}
+
+function navigatePokemon(direction) {
+  let newIndex = currentPokemonIndex + direction;
+  if (newIndex >= 0 && newIndex < pokemonList.length) {
+    currentPokemonIndex = newIndex;
+    detailPokemon(pokemonList[newIndex]);
+  } else {
+    console.warn("Navigation out of bounds", newIndex);
+  }
+}
+
+function next() {
+  navigatePokemon(1);
+}
+
+function back() {
+  navigatePokemon(-1);
+}
+
+function closeModal() {
+  const modal = document.getElementById("pokemon-modal");
+  modal.style.display = "none";
+  document.body.style.backgroundColor = "white";
+  document.getElementById("pokemon-list").style.display = "";
+}
 
 function ifRequest(types) {
   if (types.includes("normal") && types.length > 1) {
@@ -132,108 +278,26 @@ function ifRequest(types) {
   return backgroundColor;
 }
 
-function detailPokemon(pokemon) {
-  const modal = document.getElementById("pokemon-modal");
-  const modalContent = document.getElementById("pokemon-modal-content");
-
-  const abilities = (pokemon.abilities || [])
-    .filter((abilityInfo) => abilityInfo && abilityInfo.ability)
-    .map((abilityInfo) => abilityInfo.ability.name)
-    .join(", ");
-  const weight = pokemon.weight;
-  const height = pokemon.height;
-  const types = (pokemon.types || [])
-    .filter((typeInfo) => typeInfo && typeInfo.type)
-    .map((typeInfo) => typeInfo.type.name)
-    .join(", ");
-
-  const movePromises = (pokemon.moves || []).slice(0, 5).map((moveInfo) => {
-    const moveName = moveInfo.move.name;
-    const moveUrl = moveInfo.move.url;
-
-    return fetch(moveUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch move data for ${moveName}`);
-        }
-        return response.json();
-      })
-      .then((moveData) => {
-        const power = moveData.power || 0;
-        return `
-                  <div>
-                      <p>${moveName}</p>
-                      <div class="progress" role="progressbar" aria-label="${moveName}" aria-valuenow="${power}" aria-valuemin="0" aria-valuemax="100">
-                          <div class="progress-bar" style="width: ${power}%">${power}</div>
-                      </div>
-                  </div>
-              `;
-      })
-      .catch((error) => {
-        console.error(error);
-        return `<p>${moveName}: Unable to fetch move data</p>`;
-      });
-  });
-
-  Promise.all(movePromises).then((moveHtml) => {
-    modalContent.innerHTML = `
-          <h5 class="card-title">${pokemon.name}</h5>
-          <div class="card" style="width: 18rem;">
-              <div class="card-body">
-              <img src="${pokemon.sprites.front_default}" class="card-img-top">
-                  <table class="table table-borderless">
-                      <tr>
-                          <td>Types</td>
-                          <td>${types}</td>
-                      </tr>
-                      <tr>
-                          <td>Weight</td>
-                          <td>${weight}</td>
-                      </tr>
-                      <tr>
-                          <td>Height</td>
-                          <td>${height}</td>
-                      </tr>
-                      <tr>
-                          <td>Abilities</td>
-                          <td>${abilities}</td>
-                      </tr>
-                  </table>
-              </div>
-              ${moveHtml.join("")}
-          </div>
-          <button class="btn btn-danger position-btn-right"  onclick="next()">-></button>
-          <button class="btn btn-danger position-btn-left" onclick="back()"><-</button>
-          `;
-    modal.style.display = "block";
-    document.body.style.backgroundColor = "lightgrey";
-    document.getElementById("pokemon-list").style.display = "none";
-  });
+function search() {
+  const query = document.getElementById("search").value.toLowerCase();
+  const filteredPokemon = pokemonList.filter(pokemon =>
+    pokemon.name.toLowerCase().includes(query)
+  );
+  renderFilteredPokemon(filteredPokemon);
 }
 
-function navigatePokemon(direction) {
-  let newIndex = currentPokemonIndex + direction;
-  if (newIndex >= 0 && newIndex < pokemonList.length) {
-    currentPokemonIndex = newIndex;
-    detailPokemon(pokemonList[newIndex]);
-  } else {
-    console.warn("Navigation out of bounds", newIndex);
+function renderFilteredPokemon(filteredPokemon) {
+  const pokemonContainer = document.getElementById("pokemon-list");
+  pokemonContainer.innerHTML = "";
+
+  for (let i = 0; i < filteredPokemon.length; i++) {
+    const pokemon = filteredPokemon[i];
+    const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
+    const typesString = types.join(", ");
+    const backgroundColor = ifRequest(types);
+
+    const pokemonDiv = createPokemonDiv(i, pokemon, typesString, backgroundColor);
+    pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
+    pokemonContainer.appendChild(pokemonDiv);
   }
 }
-
-function next() {
-  navigatePokemon(1);
-}
-
-function back() {
-  navigatePokemon(-1);
-}
-
-function closeModal() {
-  const modal = document.getElementById("pokemon-modal");
-  modal.style.display = "none";
-  document.body.style.backgroundColor = "white";
-  document.getElementById("pokemon-list").style.display = "";
-}
-
-

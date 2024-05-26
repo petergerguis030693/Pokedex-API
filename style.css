@@ -57,7 +57,6 @@ header button {
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 20px;
-  margin-left: 20px;
 }
 
 .pokemon {
@@ -65,7 +64,7 @@ header button {
   width: 250px;
   border-radius: 20px;
   background-color: brown;
-  margin: 24px;
+  margin: 15px;
   box-shadow: 5px 10px 10px rgb(190, 186, 186);
 }
 
@@ -127,7 +126,13 @@ button {
 }
 
 .modal-myself {
-  margin-left: 33.3%;
+  margin-left: 40%;
+}
+
+@media (max-width: 600px) {
+  .modal-myself {
+    margin-left: 0px;
+  }
 }
 
 .btn-danger {

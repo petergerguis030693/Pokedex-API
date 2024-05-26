@@ -8,17 +8,21 @@
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="shortcut icon" href="img/pokeball.png" type="image/x-icon">
     <script src="script.js"></script>
+    <script src="auslagerung.js"></script>
+
   </head>
   <body onload="renderPokemon()">
     <header>
       <img src="img/pokeball.png" />
       <div>
+        
         <input
-          type="text"
-          id="search"
-          placeholder="Search Pokémon by name..."
-          onload="search()"
-        />
+        type="text"
+        id="search"
+        placeholder="Search Pokémon by name..."
+        oninput="search()"
+      />
+      
       </div>
     </header>
 

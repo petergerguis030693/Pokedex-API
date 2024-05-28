@@ -132,11 +132,36 @@ button {
   margin-left: 40%;
 }
 
+
+
 @media (max-width: 600px) {
   .modal-myself {
-    justify-content: center;
-    align-items: center;
-    margin-left: 0px;
+    margin-left: 30%;
+    }
+}
+
+@media (max-width: 470px) {
+  .modal-myself {
+    margin-left: 20%;
+    }
+}
+
+@media (max-width: 420px) {
+  .modal-myself {
+    margin-left: 10%;
+    }
+}
+
+@media (max-width: 370px) {
+  .modal-myself {
+    margin-left: 5%;
+    }
+}
+
+@media (max-width: 370px) {
+  .modal-myself {
+    margin-left: 1%;
+    margin-right: 1%;
     }
 }
 
@@ -175,4 +200,73 @@ table {
   position: absolute;
   top: 250px;
   right: 0px;
+}
+
+.bg-red {
+  background-color: red;
+  color: white;
+}
+.bg-green {
+  background-color: green;
+  color: white;
+}
+.bg-blue {
+  background-color: blue;
+  color: white;
+}
+.bg-yellow {
+  background-color: yellow;
+  color: black;
+}
+.bg-lightblue {
+  background-color: lightblue;
+  color: black;
+}
+.bg-orange {
+  background-color: orange;
+  color: white;
+}
+.bg-purple {
+  background-color: purple;
+  color: white;
+}
+.bg-brown {
+  background-color: brown;
+  color: white;
+}
+.bg-skyblue {
+  background-color: skyblue;
+  color: black;
+}
+.bg-pink {
+  background-color: pink;
+  color: black;
+}
+.bg-limegreen {
+  background-color: limegreen;
+  color: black;
+}
+.bg-gray {
+  background-color: gray;
+  color: white;
+}
+.bg-indigo {
+  background-color: indigo;
+  color: white;
+}
+.bg-darkblue {
+  background-color: darkblue;
+  color: white;
+}
+.bg-black {
+  background-color: black;
+  color: white;
+}
+.bg-silver {
+  background-color: silver;
+  color: black;
+}
+.bg-lightpink {
+  background-color: lightpink;
+  color: black;
 }

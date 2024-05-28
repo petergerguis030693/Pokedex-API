@@ -1,20 +1,53 @@
 let pokemonList = [];
-let currentIndex = 1;
+let currentIndex = 41;
 let currentPokemonIndex = 0;
 
+const typeToClassMap = {
+  fire: "bg-red",
+  grass: "bg-green",
+  water: "bg-blue",
+  electric: "bg-yellow",
+  ice: "bg-lightblue",
+  fighting: "bg-orange",
+  poison: "bg-purple",
+  ground: "bg-brown",
+  flying: "bg-skyblue",
+  psychic: "bg-pink",
+  bug: "bg-limegreen",
+  rock: "bg-gray",
+  ghost: "bg-indigo",
+  dragon: "bg-darkblue",
+  dark: "bg-black",
+  steel: "bg-silver",
+  fairy: "bg-lightpink",
+  normal: "bg-darkblue",  
+}
+
+
 async function init() {
-  for (let i = 1; i < 41; i++) {
-    await loadPokemon(i);
-  }
+  await loadInitialPokemon();
   renderPokemon();
 }
 
-async function loadPokemon(i) {
-  let url = `https://pokeapi.co/api/v2/pokemon/${i}`;
-  let response = await fetch(url);
-  let pokemon = await response.json();
-  pokemonList.push(pokemon);
+async function loadInitialPokemon() {
+  const promises = [];
+  for (let i = 1; i <= 40; i++) {
+    promises.push(loadPokemon(i));
+  }
+  await Promise.all(promises);
 }
+
+async function loadPokemon(i) {
+  try {
+    const url = `https://pokeapi.co/api/v2/pokemon/${i}`;
+    const response = await fetch(url);
+    const pokemon = await response.json();
+    pokemonList[i - 1] = pokemon; // Speichern Sie das Pokemon an der richtigen Position
+  } catch (error) {
+    console.error(`Failed to load Pokemon ${i}`, error);
+  }
+}
+
 
 function renderPokemon() {
   const pokemonContainer = document.getElementById("pokemon-list");
@@ -26,12 +59,7 @@ function renderPokemon() {
     const typesString = types.join(", ");
     const backgroundColor = ifRequest(types);
 
-    const pokemonDiv = createPokemonDiv(
-      i,
-      pokemon,
-      typesString,
-      backgroundColor
-    );
+    const pokemonDiv = createPokemonDiv(i,pokemon,typesString,backgroundColor);
     pokemonDiv.addEventListener("click", () => {
       currentPokemonIndex = i;
       detailPokemon(pokemon);
@@ -41,18 +69,13 @@ function renderPokemon() {
   }
 }
 
-function createPokemonDiv(index, pokemon, typesString, backgroundColor) {
+function createPokemonDiv(index, pokemon, typesString, className) {
   const pokemonDiv = document.createElement("div");
-  pokemonDiv.style.backgroundColor = backgroundColor;
-  pokemonDiv.className = "pokemon";
-  pokemonDiv.innerHTML = createPokemonCardHtml(
-    index,
-    pokemon.name,
-    pokemon.sprites.front_default,
-    typesString
-  );
+  pokemonDiv.className = `pokemon ${className}`;
+  pokemonDiv.innerHTML = createPokemonCardHtml(index, pokemon.name, pokemon.sprites.front_default, typesString);
   return pokemonDiv;
 }
+
 
 function createPokemonCardHtml(index, name, imgSrc, typesString) {
   return `
@@ -95,14 +118,7 @@ function detailPokemon(pokemon) {
   const height = pokemon.height;
 
   fetchMoveHtml(pokemon.moves).then((moveHtml) => {
-    modalContent.innerHTML = createModalContent(
-      pokemon,
-      abilities,
-      types,
-      weight,
-      height,
-      moveHtml
-    );
+    modalContent.innerHTML = createModalContent(pokemon,abilities,types,weight,height,moveHtml);
     modal.style.display = "block";
     document.body.style.backgroundColor = "lightgrey";
     document.getElementById("pokemon-list").style.display = "none";
@@ -139,23 +155,9 @@ function createMoveHtml(name, power) {
     </div>`;
 }
 
-function createModalContent(
-  pokemon,
-  abilities,
-  types,
-  weight,
-  height,
-  moveHtml
-) {
+function createModalContent(pokemon,abilities,types,weight,height,moveHtml) {
   return `${createHeader(pokemon.name)}
-  ${createCard(
-    pokemon.sprites.front_default,
-    abilities,
-    types,
-    weight,
-    height,
-    moveHtml
-  )}`;
+  ${createCard(pokemon.sprites.front_default,abilities,types,weight,height,moveHtml)}`;
 }
 
 function createHeader(name) {
@@ -164,12 +166,8 @@ function createHeader(name) {
 
 function createCard(imgSrc, abilities, types, weight, height, moveHtml) {
   return `<div class="card" style="width: 18rem;">
-    <div class="card-body"><img src="${imgSrc}" class="card-img-top" >${createTable(
-    abilities,
-    types,
-    weight,
-    height
-  )}</div>
+    <div class="card-body"><img src="${imgSrc}" class="card-img-top" >${createTable(abilities,types,weight,height)}
+    </div>
     ${moveHtml.join("")}
     ${createButtons()}</div>`;
 }
@@ -227,68 +225,11 @@ function ifRequest(types) {
   if (types.includes("normal") && types.length > 1) {
     types = types.filter((type) => type !== "normal");
   } else if (types.length === 1 && types[0] === "normal") {
-    types = ["brown"];
+    types = ["normal"];  
   }
 
   let primaryType = types[0];
-
-  let backgroundColor;
-  switch (primaryType) {
-    case "fire":
-      backgroundColor = "red";
-      break;
-    case "grass":
-      backgroundColor = "green";
-      break;
-    case "water":
-      backgroundColor = "blue";
-      break;
-    case "electric":
-      backgroundColor = "yellow";
-      break;
-    case "ice":
-      backgroundColor = "lightblue";
-      break;
-    case "fighting":
-      backgroundColor = "orange";
-      break;
-    case "poison":
-      backgroundColor = "purple";
-      break;
-    case "ground":
-      backgroundColor = "brown";
-      break;
-    case "flying":
-      backgroundColor = "skyblue";
-      break;
-    case "psychic":
-      backgroundColor = "pink";
-      break;
-    case "bug":
-      backgroundColor = "limegreen";
-      break;
-    case "rock":
-      backgroundColor = "gray";
-      break;
-    case "ghost":
-      backgroundColor = "indigo";
-      break;
-    case "dragon":
-      backgroundColor = "darkblue";
-      break;
-    case "dark":
-      backgroundColor = "black";
-      break;
-    case "steel":
-      backgroundColor = "silver";
-      break;
-    case "fairy":
-      backgroundColor = "lightpink";
-      break;
-    default:
-      backgroundColor = "darkblue";
-  }
-  return backgroundColor;
+  return typeToClassMap[primaryType] || "bg-darkblue"; 
 }
 
 function search() {
@@ -303,19 +244,15 @@ function renderFilteredPokemon(filteredPokemon) {
   const pokemonContainer = document.getElementById("pokemon-list");
   pokemonContainer.innerHTML = "";
 
-  for (let i = 0; i < filteredPokemon.length; i++) {
-    const pokemon = filteredPokemon[i];
+  filteredPokemon.forEach((pokemon) => {
+    const index = pokemonList.indexOf(pokemon); // Den richtigen Index im Original-Array finden
     const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
     const typesString = types.join(", ");
-    const backgroundColor = ifRequest(types);
+    const className = ifRequest(types);
 
-    const pokemonDiv = createPokemonDiv(
-      i,
-      pokemon,
-      typesString,
-      backgroundColor
-    );
+    const pokemonDiv = createPokemonDiv(index, pokemon, typesString, className);
     pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
     pokemonContainer.appendChild(pokemonDiv);
-  }
+  });
 }
+

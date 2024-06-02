@@ -1,5 +1,5 @@
 let pokemonList = [];
-let currentIndex = 41;
+let currentIndex = 1;
 let currentPokemonIndex = 0;
 
 const typeToClassMap = {
@@ -20,9 +20,8 @@ const typeToClassMap = {
   dark: "bg-black",
   steel: "bg-silver",
   fairy: "bg-lightpink",
-  normal: "bg-darkblue",  
-}
-
+  normal: "bg-darkblue",
+};
 
 async function init() {
   await loadInitialPokemon();
@@ -42,12 +41,11 @@ async function loadPokemon(i) {
     const url = `https://pokeapi.co/api/v2/pokemon/${i}`;
     const response = await fetch(url);
     const pokemon = await response.json();
-    pokemonList[i - 1] = pokemon; // Speichern Sie das Pokemon an der richtigen Position
+    pokemonList[i - 1] = pokemon;
   } catch (error) {
     console.error(`Failed to load Pokemon ${i}`, error);
   }
 }
-
 
 function renderPokemon() {
   const pokemonContainer = document.getElementById("pokemon-list");
@@ -56,28 +54,26 @@ function renderPokemon() {
   for (let i = 0; i < pokemonList.length; i++) {
     const pokemon = pokemonList[i];
     const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
-    const typesString = types.join(", ");
-    const backgroundColor = ifRequest(types);
-
-    const pokemonDiv = createPokemonDiv(i,pokemon,typesString,backgroundColor);
+    const className = ifRequest(types);
+    const pokemonDiv = createPokemonDiv(i, pokemon, types, className);
     pokemonDiv.addEventListener("click", () => {
       currentPokemonIndex = i;
-      detailPokemon(pokemon);
+      detailPokemon(pokemon, i);
     });
-
     pokemonContainer.appendChild(pokemonDiv);
   }
 }
 
-function createPokemonDiv(index, pokemon, typesString, className) {
+function createPokemonDiv(index, pokemon, types, className) {
   const pokemonDiv = document.createElement("div");
   pokemonDiv.className = `pokemon ${className}`;
-  pokemonDiv.innerHTML = createPokemonCardHtml(index, pokemon.name, pokemon.sprites.front_default, typesString);
+  pokemonDiv.innerHTML = createPokemonCardHtml(index, pokemon.name, pokemon.id, types);
   return pokemonDiv;
 }
 
-
-function createPokemonCardHtml(index, name, imgSrc, typesString) {
+function createPokemonCardHtml(index, name, id, types) {
+  const imgSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  const typesHtml = types.map(type => `<span class="type-badge">${type}</span>`).join(' ');
   return `
     <div class="upperContainer">
       <p>#${index + 1}</p>
@@ -85,8 +81,8 @@ function createPokemonCardHtml(index, name, imgSrc, typesString) {
     </div>
     <div class="upperC">
       <img src="${imgSrc}">
-      <div class="categoryTypes" onclick="detailPokemon(${index}, '${name}', '${typesString}')">
-        <p>${typesString}</p>
+      <div class="categoryTypes" onclick="detailPokemon(pokemonList[${index}], ${index})">
+        ${typesHtml}
       </div>
     </div>
   `;
@@ -99,6 +95,7 @@ async function loadMorePokemon() {
   }
   await Promise.all(promises);
   currentIndex += 10;
+  renderPokemon();
 }
 
 async function more() {
@@ -108,20 +105,39 @@ async function more() {
 
 init();
 
-function detailPokemon(pokemon) {
-  const modal = document.getElementById("pokemon-modal");
+function setupModalContent(pokemon, abilities, types, weight, height, moveHtml) {
   const modalContent = document.getElementById("pokemon-modal-content");
+  modalContent.innerHTML = createModalContent(pokemon, abilities, types, weight, height, moveHtml);
+}
 
+function toggleBackButton(pokemon) {
+  const backButton = document.getElementById('back');
+  backButton.style.display = pokemon.name === 'bulbasaur' ? "none" : "inline-block";
+}
+
+function toggleDisplay(showModal) {
+  const modal = document.getElementById("pokemon-modal");
+  modal.style.display = showModal ? "flex" : "none";
+  document.body.style.backgroundColor = showModal ? "lightgrey" : "white";
+  document.getElementById("pokemon-list").style.display = showModal ? "none" : "";
+  document.getElementById("moreButton").style.display = showModal ? "none" : "inline-block";
+}
+
+function processPokemonData(pokemon) {
   const abilities = extractNames(pokemon.abilities, "ability");
   const types = extractNames(pokemon.types, "type");
-  const weight = pokemon.weight;
-  const height = pokemon.height;
+  const { weight, height } = pokemon;
+  return { abilities, types, weight, height };
+}
 
+function detailPokemon(pokemon, index) {
+  currentPokemonIndex = index;
+  const { abilities, types, weight, height } = processPokemonData(pokemon);
   fetchMoveHtml(pokemon.moves).then((moveHtml) => {
-    modalContent.innerHTML = createModalContent(pokemon,abilities,types,weight,height,moveHtml);
-    modal.style.display = "block";
-    document.body.style.backgroundColor = "lightgrey";
-    document.getElementById("pokemon-list").style.display = "none";
+    window.currentPokemonData = { abilities, types, weight, height, moveHtml };
+    setupModalContent(pokemon, abilities, types, weight, height, moveHtml);
+    toggleBackButton(pokemon);
+    toggleDisplay(true);
   });
 }
 
@@ -133,7 +149,7 @@ function extractNames(array, key) {
 }
 
 function fetchMoveHtml(moves) {
-  const movePromises = (moves || []).slice(0, 5).map(({ move }) =>
+  const movePromises = (moves || []).slice(0, 6).map(({ move }) =>
     fetch(move.url)
       .then((response) => {
         if (!response.ok)
@@ -155,21 +171,43 @@ function createMoveHtml(name, power) {
     </div>`;
 }
 
-function createModalContent(pokemon,abilities,types,weight,height,moveHtml) {
+function createModalContent(pokemon, abilities, types, weight, height, moveHtml) {
   return `${createHeader(pokemon.name)}
-  ${createCard(pokemon.sprites.front_default,abilities,types,weight,height,moveHtml)}`;
+  ${createCard(pokemon.id, abilities, types, weight, height, moveHtml)}`;
 }
 
 function createHeader(name) {
-  return `<h5 class="card-title">${name}</h5>`;
+  return `<button type="button" class="btn-close margin-left" aria-label="Close" onclick="closeModal()"></button><h5 class="card-title">${name}</h5>`;
 }
 
-function createCard(imgSrc, abilities, types, weight, height, moveHtml) {
-  return `<div class="card" style="width: 18rem;">
-    <div class="card-body"><img src="${imgSrc}" class="card-img-top" >${createTable(abilities,types,weight,height)}
+function createCard(id, abilities, types, weight, height, moveHtml) {
+  const imgSrc = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+  return `
+  <div class="card" style="width: 18rem;">
+    <div class="card-body">
+      <img src="${imgSrc}" class="card-img-top">
+        <button class="btn btn-primary" style="margin-right: 10px;" onclick="showTab('tab1')">About</button>
+        <button class="btn btn-primary" onclick="showTab('tab2')">Base Stats</button>
+      <div id="tabContent" style="width: 100%;">
+        ${createTable(abilities, types, weight, height)}
+      </div>
     </div>
-    ${moveHtml.join("")}
-    ${createButtons()}</div>`;
+    ${createButtons()}
+  </div>`;
+}
+
+function showTab(tab) {
+  const tabContent = document.getElementById('tabContent');
+  if (!window.currentPokemonData) {
+    console.error("currentPokemonData is not set");
+    return;
+  }
+  const { abilities, types, weight, height, moveHtml } = window.currentPokemonData;
+  if (tab === 'tab1') {
+    tabContent.innerHTML = createTable(abilities, types, weight, height);
+  } else if (tab === 'tab2') {
+    tabContent.innerHTML = createMoves(moveHtml);
+  }
 }
 
 function createTable(abilities, types, weight, height) {
@@ -191,18 +229,20 @@ function createTableRow(label, value) {
   </tr>`;
 }
 
+function createMoves(moveHtml) {
+  return moveHtml.join("");
+}
+
 function createButtons() {
   return `<button class="btn btn-danger position-btn-right" onclick="next()">-></button>
-  <button class="btn btn-danger position-btn-left" onclick="back()"><-</button>`;
+  <button class="btn btn-danger position-btn-left" id="back" onclick="back()"><-</button>`;
 }
 
 function navigatePokemon(direction) {
   let newIndex = currentPokemonIndex + direction;
   if (newIndex >= 0 && newIndex < pokemonList.length) {
     currentPokemonIndex = newIndex;
-    detailPokemon(pokemonList[newIndex]);
-  } else {
-    console.warn("Navigation out of bounds", newIndex);
+    detailPokemon(pokemonList[newIndex], newIndex);
   }
 }
 
@@ -219,17 +259,18 @@ function closeModal() {
   modal.style.display = "none";
   document.body.style.backgroundColor = "white";
   document.getElementById("pokemon-list").style.display = "";
+  document.getElementById("moreButton").style.display = "";
 }
 
 function ifRequest(types) {
   if (types.includes("normal") && types.length > 1) {
     types = types.filter((type) => type !== "normal");
   } else if (types.length === 1 && types[0] === "normal") {
-    types = ["normal"];  
+    types = ["normal"];
   }
 
   let primaryType = types[0];
-  return typeToClassMap[primaryType] || "bg-darkblue"; 
+  return typeToClassMap[primaryType] || "bg-darkblue";
 }
 
 function search() {
@@ -245,14 +286,12 @@ function renderFilteredPokemon(filteredPokemon) {
   pokemonContainer.innerHTML = "";
 
   filteredPokemon.forEach((pokemon) => {
-    const index = pokemonList.indexOf(pokemon); // Den richtigen Index im Original-Array finden
+    const index = pokemonList.indexOf(pokemon);
     const types = pokemon.types.map((typeInfo) => typeInfo.type.name);
-    const typesString = types.join(", ");
     const className = ifRequest(types);
 
-    const pokemonDiv = createPokemonDiv(index, pokemon, typesString, className);
-    pokemonDiv.addEventListener("click", () => detailPokemon(pokemon));
+    const pokemonDiv = createPokemonDiv(index, pokemon, types, className);
+    pokemonDiv.addEventListener("click", () => detailPokemon(pokemon, index));
     pokemonContainer.appendChild(pokemonDiv);
   });
 }
-

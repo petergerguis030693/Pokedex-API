@@ -5,36 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PokeDex API</title>
     <link rel="stylesheet" href="style.css" />
-    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="shortcut icon" href="img/pokeball.png" type="image/x-icon">
+    <link
+      rel="stylesheet"
+      href="node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="shortcut icon" href="img/pokeball.png" type="image/x-icon" />
     <script src="script.js"></script>
   </head>
-  
   <body onload="renderPokemon();">
     <header>
-      <img src="img/pokeball.png" />
-      <div>
-
+      <div class="containerHeader">
+        <img src="img/pokeball.png" alt="Pokeball">
         <input
-        type="text"
-        id="search"
-        placeholder="Search Pokémon by name..."
-        oninput="search()"
-      />
-      
+          type="text"
+          id="search"
+          placeholder="Search Pokémon by name..."
+          oninput="search()"
+        />
       </div>
     </header>
 
     <div class="containerMain" id="pokemon-list"></div>
-    <button onclick="more()" class="btn btn-danger" style="margin-bottom: 36px">Load More</button>
+    <button
+      onclick="more()"
+      id="moreButton"
+      class="btn btn-danger"
+      style="margin-bottom: 36px"
+    >
+      Load More
+    </button>
 
     <div id="pokemon-modal" class="modal modal-myself">
-      <button type="button" class="btn-close" aria-label="Close" onclick="closeModal()"></button>
-      <div class="modal-content modal-content-myself" id="pokemon-modal-content"></div>
-
-
-  </div>
-
- 
+      <div
+        class="modal-content modal-content-myself"
+        id="pokemon-modal-content"
+      ></div>
+    </div>
   </body>
 </html>
